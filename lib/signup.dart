@@ -9,11 +9,13 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUp extends State<SignUp> {
-  bool isDarkMode = true; // Set to true/false based on theme mode
   bool isSignUp = true;
 
   @override
   Widget build(BuildContext context) {
+
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -94,9 +96,53 @@ class _SignUp extends State<SignUp> {
                       buildTab("SIGNUP", isSignUp),
                     ],
                   ),
+                  isSignUp ? buildSignupSection(isDarkMode ? Colors.black : Colors.white) : buildLoginSection(isDarkMode ? Colors.black : Colors.white),
                 ],
               ),
             ),
+          ),
+          Positioned(
+            top: 535,
+              right: 0,
+              left: 0,
+              child: Center(
+                child: Container(
+                  height: 90,
+                  width: 90,
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                            color: isDarkMode ? Colors.white.withOpacity(.3) : Colors.black.withOpacity(.3),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: Offset(0, 1)
+                        ),
+                      ]
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors:  [Colors.lightBlueAccent, Colors.blueAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDarkMode ? Colors.white.withOpacity(.3) : Colors.black.withOpacity(.3),
+                          spreadRadius: 1,
+                          blurRadius: 2,
+                          offset: Offset(0, 1)
+                        ),
+                      ]
+                    ),
+                    child: Icon(Icons.arrow_forward, color: Colors.white),
+                  ),
+                ),
+              ),
           ),
         ],
       ),
@@ -125,6 +171,83 @@ class _SignUp extends State<SignUp> {
             height: 2,
             width: 55,
             color: isActive ? Colors.blue : Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTextFormField(String labelText, String hintText, IconData prefixIcon){
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: TextFormField(
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          filled: true,
+          fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+          enabledBorder: Theme.of(context).inputDecorationTheme.enabledBorder,
+          focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder,
+          prefixIcon: Icon(
+            prefixIcon,
+            color: Theme.of(context).iconTheme.color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Container buildSignupSection(Color color){
+    return Container(
+      child: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.only(top: 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  child: Form(
+                    child: buildTextFormField("Username", "Enter Username", Icons.person_2_outlined),
+                  ),
+                ),
+                SizedBox(
+                  child: Form(
+                    child: buildTextFormField("Email", "Enter Email", Icons.email_outlined),
+                  ),
+                ),
+                SizedBox(
+                  child: Form(
+                    child: buildTextFormField("Password", "Enter Password", Icons.password_outlined),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container buildLoginSection(Color color){
+    return Container(
+      child: Column(
+        children: [
+          Container(
+            margin: EdgeInsets.only(top: 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  child: Form(
+                    child: buildTextFormField("Email", "Enter Email", Icons.email_outlined),
+                  ),
+                ),
+                SizedBox(
+                  child: Form(
+                    child: buildTextFormField("Password", "Enter Password", Icons.password_outlined),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
