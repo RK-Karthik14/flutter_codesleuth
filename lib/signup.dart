@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SignUp extends StatefulWidget{
   const SignUp({Key? key}) : super(key: key);
@@ -11,6 +10,13 @@ class SignUp extends StatefulWidget{
 }
 
 class _SignUp extends State<SignUp>{
+
+  TextEditingController _firstname = TextEditingController();
+  TextEditingController _lastname = TextEditingController();
+  TextEditingController _codechef = TextEditingController();
+  TextEditingController _leetcode = TextEditingController();
+  TextEditingController _hackerrank = TextEditingController();
+  TextEditingController _hackerearth = TextEditingController();
 
   @override
   Widget build(BuildContext context){
@@ -36,6 +42,7 @@ class _SignUp extends State<SignUp>{
                         width: 145,
                         child: Form(
                           child: TextFormField(
+                            controller: _firstname,
                             decoration: InputDecoration(
                               labelText: 'First Name',
                               labelStyle: TextStyle(color: Theme.of(context).inputDecorationTheme.labelStyle?.color),
@@ -58,6 +65,7 @@ class _SignUp extends State<SignUp>{
                         width: 145,
                         child: Form(
                           child: TextFormField(
+                            controller: _lastname,
                             decoration: InputDecoration(
                               labelText: 'Last Name',
                               labelStyle: TextStyle(color: Theme.of(context).inputDecorationTheme.labelStyle?.color),
@@ -83,6 +91,7 @@ class _SignUp extends State<SignUp>{
                   width: 300,
                   child: Form(
                     child: TextFormField(
+                      controller: _hackerrank,
                       decoration: InputDecoration(
                           labelText: 'Hackerrank',
                           labelStyle: TextStyle(
@@ -103,6 +112,7 @@ class _SignUp extends State<SignUp>{
                   width: 300,
                   child: Form(
                     child: TextFormField(
+                      controller: _hackerearth,
                       decoration: InputDecoration(
                           labelText: 'Hackerearth',
                           labelStyle: TextStyle(
@@ -123,6 +133,7 @@ class _SignUp extends State<SignUp>{
                   width: 300,
                   child: Form(
                     child: TextFormField(
+                      controller: _codechef,
                       decoration: InputDecoration(
                         labelText: 'Codechef',
                         labelStyle: TextStyle(
@@ -143,6 +154,7 @@ class _SignUp extends State<SignUp>{
                   width: 300,
                   child: Form(
                     child: TextFormField(
+                      controller: _leetcode,
                       decoration: InputDecoration(
                           labelText: 'Leetcode',
                           labelStyle: TextStyle(
