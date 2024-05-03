@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_styled_toast/flutter_styled_toast.dart';
 
-void customtoast(String message, BuildContext context, {Color backgroundColor = Colors.white}){
+void customtoast(String message, BuildContext context, {Color backgroundColor = Colors.blueAccent}){
   showToast(
       message,
       textStyle: const TextStyle(
