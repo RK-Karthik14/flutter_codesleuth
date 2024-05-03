@@ -49,6 +49,7 @@ dependencies:
   email_validator: ^2.1.17
   shared_preferences: ^2.2.3
   curved_navigation_bar: ^1.0.3
+  http: ^1.2.1
 
 dev_dependencies:
   flutter_test:

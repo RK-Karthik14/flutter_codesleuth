@@ -4,7 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
-
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget{
   const HomeScreen({Key? key}) : super(key: key);
@@ -16,6 +17,16 @@ class HomeScreen extends StatefulWidget{
 class _HomeScreen extends State<HomeScreen>{
 
   int _page = 1;
+  String _codechefrating = '';
+  String _leetCodeRaking = '';
+  bool _isLoading = false;
+
+  @override
+  void initState(){
+    super.initState();
+    _fetchCodeChefInfo();
+    _fetchLeetCodeInfo();
+  }
 
   @override
   Widget build(BuildContext context){
@@ -159,22 +170,8 @@ class _HomeScreen extends State<HomeScreen>{
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.lightBlueAccent,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          height: 200,
-                          width: (screenWidth / 2) - 20,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.lightBlueAccent,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          height: 200,
-                          width: (screenWidth / 2) - 20,
-                        ),
+                        platformContainer(screenWidth, 'codechef.png', res: _codechefrating),
+                        platformContainer(screenWidth, 'hackerearth.png'),
                       ],
                     ),
                   ),
@@ -183,22 +180,8 @@ class _HomeScreen extends State<HomeScreen>{
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.lightBlueAccent,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          height: 200,
-                          width: (screenWidth / 2) - 20,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.lightBlueAccent,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          height: 200,
-                          width: (screenWidth / 2) - 20,
-                        ),
+                        platformContainer(screenWidth, 'leetcode.png', res: _leetCodeRaking),
+                        platformContainer(screenWidth, 'hackerrank.png'),
                       ],
                     ),
                   ),
@@ -211,10 +194,99 @@ class _HomeScreen extends State<HomeScreen>{
     );
   }
 
+  Container platformContainer(double screenWidth, String image, {String res = 'Under Construction'}){
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blue[100],
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 5, blurRadius: 7, offset: Offset(0, 3))
+        ]
+      ),
+      height: 200,
+      width: (screenWidth / 2) - 40,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+              height: 80,
+              child: Image.asset('assets/images/'+image)
+          ),
+          SizedBox(height: 10,),
+          Text(
+            'Rating: $res',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
   String getFormattedDate(){
     DateTime now = DateTime.now();
     return DateFormat('dd, EEE, yyyy').format(now);
   }
 
+  Future<void> _fetchCodeChefInfo() async{
+    setState(() {
+      _isLoading = true;
+    });
 
+    try {
+      final response = await http.get(
+          Uri.parse('https://codechef-api.vercel.app/karthik_rk'));
+
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        setState(() {
+          _codechefrating = userData['currentRating'].toString();
+          _isLoading = false;
+        });
+      }
+      else {
+        setState(() {
+          _isLoading = false;
+        });
+        throw Exception('Failed to load user Data');
+      }
+    }
+    catch(e){
+      setState(() {
+        _isLoading = false;
+      });
+      print(e);
+    }
+  }
+
+  Future<void> _fetchLeetCodeInfo() async{
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.get(
+          Uri.parse('https://leetcode-stats-api.herokuapp.com/rk_karthik14'));
+
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        setState(() {
+          _leetCodeRaking = userData['ranking'].toString();
+          _isLoading = false;
+        });
+      }
+      else {
+        setState(() {
+          _isLoading = false;
+        });
+        throw Exception('Failed to load user Data');
+      }
+    }
+    catch(e){
+      setState(() {
+        _isLoading = false;
+      });
+      print(e);
+    }
+  }
 }
