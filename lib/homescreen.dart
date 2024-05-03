@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as htmlParser;
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget{
@@ -19,6 +20,7 @@ class _HomeScreen extends State<HomeScreen>{
   int _page = 1;
   String _codechefrating = '';
   String _leetCodeRaking = '';
+  String _codeForcesRating = '';
   bool _isLoading = false;
 
   @override
@@ -26,6 +28,7 @@ class _HomeScreen extends State<HomeScreen>{
     super.initState();
     _fetchCodeChefInfo();
     _fetchLeetCodeInfo();
+    _scrapeCodeForcesProfile();
   }
 
   @override
@@ -185,6 +188,15 @@ class _HomeScreen extends State<HomeScreen>{
                       ],
                     ),
                   ),
+                  const SizedBox(height: 10,),
+                  Container(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        platformContainer(screenWidth, 'codeforces.png', res: _codeForcesRating),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -289,4 +301,32 @@ class _HomeScreen extends State<HomeScreen>{
       print(e);
     }
   }
+
+  Future<void> _scrapeCodeForcesProfile() async{
+    try{
+      final response = await http.get(Uri.parse('https://codeforces.com/profile/rk_karthik'));
+
+      if(response.statusCode == 200){
+        final document = htmlParser.parse(response.body);
+        final ratingElement = document.querySelector('.user-gray[style="font-weight:bold;"]');
+
+        if(ratingElement != null){
+          final userRating = ratingElement.text.trim();
+          _codeForcesRating = userRating;
+          print('User Rating: ${userRating}');
+        }
+        else{
+          print('Rating not found');
+        }
+
+      }
+      else{
+        print('Failed to load: ${response.statusCode}');
+      }
+    }
+    catch(e){
+      print(e);
+    }
+  }
+
 }
