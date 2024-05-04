@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'package:html/parser.dart' as htmlParser;
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget{
@@ -19,16 +18,18 @@ class _HomeScreen extends State<HomeScreen>{
 
   int _page = 1;
   String _codechefrating = '';
-  String _leetCodeRaking = '';
+  String _leetCodeRanking = '';
   String _codeForcesRating = '';
+  String cpName = '';
   bool _isLoading = false;
+  bool _showPlatformInfo = false;
 
   @override
   void initState(){
     super.initState();
     _fetchCodeChefInfo();
     _fetchLeetCodeInfo();
-    _scrapeCodeForcesProfile();
+    _fetchCodeforcesInfo();
   }
 
   @override
@@ -36,9 +37,10 @@ class _HomeScreen extends State<HomeScreen>{
 
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
+    
 
     return Scaffold(
-      backgroundColor: Color(0xFF21118a),
+      backgroundColor: Color(0xFF121A94),
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: Colors.transparent,
         index: _page,
@@ -163,42 +165,10 @@ class _HomeScreen extends State<HomeScreen>{
             width: screenWidth,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(topRight: Radius.circular(45), topLeft: Radius.circular(45)),
-                color: Colors.white
+                color: Colors.white,
             ),
             child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Text('Analysis', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),),
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        platformContainer(screenWidth, 'codechef.png', res: _codechefrating),
-                        platformContainer(screenWidth, 'hackerearth.png'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10,),
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        platformContainer(screenWidth, 'leetcode.png', res: _leetCodeRaking),
-                        platformContainer(screenWidth, 'hackerrank.png'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10,),
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        platformContainer(screenWidth, 'codeforces.png', res: _codeForcesRating),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              child: _showPlatformInfo ? platformInfo(cpName, screenWidth) : codingPlatforms(screenWidth)
             ),
           ),
         ),
@@ -206,7 +176,80 @@ class _HomeScreen extends State<HomeScreen>{
     );
   }
 
-  Container platformContainer(double screenWidth, String image, {String res = 'Under Construction'}){
+  Container codingPlatforms(double screenWidth){
+    return Container(
+      child: Column(
+        children: [
+          Text('Analysis', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                InkWell(
+                    onTap: (){
+                      setState(() {
+                        _showPlatformInfo = true;
+                        cpName = 'CodeChef';
+                      });
+                    },
+                    child: platformContainer(screenWidth, 'codechef.png', res: _codechefrating)),
+                InkWell(
+                  onTap: (){
+                    setState(() {
+                      _showPlatformInfo = true;
+                      cpName = "HackerEarth";
+                    });
+                  },
+                    child: platformContainer(screenWidth, 'hackerearth.png')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10,),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                InkWell(
+                  onTap: (){
+                    setState(() {
+                      _showPlatformInfo = true;
+                      cpName = "LeetCode";
+                    });
+                  },
+                    child: platformContainer(screenWidth, 'leetcode.png', res: _leetCodeRanking)),
+                InkWell(
+                  onTap: (){
+                    setState(() {
+                      _showPlatformInfo = true;
+                      cpName = "HackerRank";
+                    });
+                  },
+                    child: platformContainer(screenWidth, 'hackerrank.png')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10,),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                InkWell(
+                  onTap: (){
+                    setState(() {
+                      _showPlatformInfo = true;
+                      cpName = "Codeforces";
+                    });
+                  },
+                    child: platformContainer(screenWidth, 'codeforces.png', res: _codeForcesRating)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Container platformContainer(double screenWidth, String image, {String res = '0xxx'}){
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue[100],
@@ -228,7 +271,29 @@ class _HomeScreen extends State<HomeScreen>{
           SizedBox(height: 10,),
           Text(
             'Rating: $res',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container platformInfo(String platformName, double screenWidth){
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(onPressed: (){setState(() {
+                _showPlatformInfo = false;
+              });}, icon: Icon(Icons.arrow_back)),
+              Text(platformName, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),),
+            ],
+          ),
+          Container(
+            width: screenWidth - 50,
+            child: Text("Hello"),
           ),
         ],
       ),
@@ -283,7 +348,7 @@ class _HomeScreen extends State<HomeScreen>{
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         setState(() {
-          _leetCodeRaking = userData['ranking'].toString();
+          _leetCodeRanking = userData['ranking'].toString();
           _isLoading = false;
         });
       }
@@ -302,29 +367,33 @@ class _HomeScreen extends State<HomeScreen>{
     }
   }
 
-  Future<void> _scrapeCodeForcesProfile() async{
-    try{
-      final response = await http.get(Uri.parse('https://codeforces.com/profile/rk_karthik'));
+  Future<void> _fetchCodeforcesInfo() async{
+    setState(() {
+      _isLoading = true;
+    });
 
-      if(response.statusCode == 200){
-        final document = htmlParser.parse(response.body);
-        final ratingElement = document.querySelector('.user-gray[style="font-weight:bold;"]');
+    try {
+      final response = await http.get(
+          Uri.parse('https://codeforces-api-zeta.vercel.app/rk_karthik'));
 
-        if(ratingElement != null){
-          final userRating = ratingElement.text.trim();
-          _codeForcesRating = userRating;
-          print('User Rating: ${userRating}');
-        }
-        else{
-          print('Rating not found');
-        }
-
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        setState(() {
+          _codeForcesRating = userData['curr_rating'].toString();
+          _isLoading = false;
+        });
       }
-      else{
-        print('Failed to load: ${response.statusCode}');
+      else {
+        setState(() {
+          _isLoading = false;
+        });
+        throw Exception('Failed to load user Data');
       }
     }
     catch(e){
+      setState(() {
+        _isLoading = false;
+      });
       print(e);
     }
   }
