@@ -1,35 +1,68 @@
 import 'package:codeslueth/emotionface.dart';
+import 'package:codeslueth/profileindex.dart';
+import 'package:codeslueth/splashscreen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget{
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreen();
+
+  static _HomeScreen? of(BuildContext context) => context.findAncestorStateOfType<_HomeScreen>();
 }
 
 class _HomeScreen extends State<HomeScreen>{
 
   int _page = 1;
-  String _codechefrating = '';
-  String _leetCodeRanking = '';
-  String _codeForcesRating = '';
   String cpName = '';
+  String imageName = '';
   bool _isLoading = false;
   bool _showPlatformInfo = false;
+
+  String _codeChefName = '';
+  String _codeChefCurrentRating = '';
+  String _codeChefHighestRating = '';
+  String _codeChefGlobalRank = '';
+  String _codeChefCountryRank = '';
+  String _codeChefStars = '';
+  String _codeChefImage = "assets/images/codechef.png";
+
+  String _leetCodeName = '';
+  String _leetCodeTotalSolved = '';
+  String _leetCodeTotalProbs = '';
+  String _leetCodeEasySolved = '';
+  String _leetCodeHardSolved = '';
+  String _leetCodeMediumSolved = '';
+  String _leetCodeRanking = '';
+  String _leetCodeAcceptanceRate = '';
+  String leetCodeImage = "assets/images/leetcode.png";
+
+  String _codeForcesName = '';
+  String _codeForcesCurrRating = '';
+  String _codeForcesMaxRating = '';
+  String _codeForcesLastVisit = '';
+  String codeforcesImage = "assets/images/codeforces.png";
+  String _codeForcesProbs = '';
+  String _codeForcesProbsLastMonth = '';
+
+
+
+  List<String> codeChefDetails = [];
 
   @override
   void initState(){
     super.initState();
-    _fetchCodeChefInfo();
-    _fetchLeetCodeInfo();
-    _fetchCodeforcesInfo();
+    _retrieveInfo();
   }
 
   @override
@@ -50,7 +83,6 @@ class _HomeScreen extends State<HomeScreen>{
         items: const <Widget>[
           Icon(Icons.person_2_outlined, color: Colors.white, size: 25,),
           Icon(Icons.home, color: Colors.white, size: 25,),
-          Icon(Icons.schedule_outlined, color: Colors.white, size: 25,)
         ],
         onTap: (index){
           setState(() {
@@ -67,13 +99,11 @@ class _HomeScreen extends State<HomeScreen>{
   Widget _buildContent(int page, double screenHeight, double screenWidth){
     switch(page){
       case 0:
-        return Container(alignment: Alignment.center, child: Text('Hello'),);
+        return profileIndex();
 
       case 1:
         return homeIndex(screenHeight, screenWidth);
 
-      case 2:
-        return Container(alignment: Alignment.center, child: Text('Hello'),);
       default:
         return Container();
     }
@@ -97,18 +127,6 @@ class _HomeScreen extends State<HomeScreen>{
                 ],
               ),
               const SizedBox(height: 15,),
-              Container(
-
-                decoration: BoxDecoration(color: Colors.blue[300], borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 5, blurRadius: 7, offset: Offset(0, 3),)]),
-                padding: EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.white,),
-                    Text('Search', style: TextStyle(color: Colors.white),)
-                  ],
-                ),
-              ),
-              const SizedBox(height: 25,),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -116,7 +134,7 @@ class _HomeScreen extends State<HomeScreen>{
                     'How do you feel?',
                     style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                   ),
-                  Icon(Icons.more_horiz, color: Colors.white,)
+                  IconButton(onPressed: (){_logout();}, icon: Icon(Icons.logout_outlined, color: Colors.white,))
                 ],
               ),
               SizedBox(height: 25,),
@@ -168,12 +186,25 @@ class _HomeScreen extends State<HomeScreen>{
                 color: Colors.white,
             ),
             child: SingleChildScrollView(
-              child: _showPlatformInfo ? platformInfo(cpName, screenWidth) : codingPlatforms(screenWidth)
+              child: _showPlatformInfo ? platformInfo(cpName, screenWidth, imageName) : codingPlatforms(screenWidth)
             ),
           ),
         ),
       ],
     );
+  }
+
+  Widget buildPlatformSpecific(String platform){
+    switch(platform){
+      case "CodeChef":
+        return codeChefInfoDetails();
+      case "LeetCode":
+        return leetCodeInfoDetails();
+      case "Codeforces":
+        return codeForcesInfoDetails();
+      default:
+        return Container();
+    }
   }
 
   Container codingPlatforms(double screenWidth){
@@ -190,41 +221,19 @@ class _HomeScreen extends State<HomeScreen>{
                       setState(() {
                         _showPlatformInfo = true;
                         cpName = 'CodeChef';
+                        imageName = _codeChefImage;
                       });
                     },
-                    child: platformContainer(screenWidth, 'codechef.png', res: _codechefrating)),
+                    child: platformContainer(screenWidth, _codeChefImage, res: _codeChefCurrentRating)),
                 InkWell(
-                  onTap: (){
-                    setState(() {
-                      _showPlatformInfo = true;
-                      cpName = "HackerEarth";
-                    });
-                  },
-                    child: platformContainer(screenWidth, 'hackerearth.png')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10,),
-          Container(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                InkWell(
-                  onTap: (){
-                    setState(() {
-                      _showPlatformInfo = true;
-                      cpName = "LeetCode";
-                    });
-                  },
-                    child: platformContainer(screenWidth, 'leetcode.png', res: _leetCodeRanking)),
-                InkWell(
-                  onTap: (){
-                    setState(() {
-                      _showPlatformInfo = true;
-                      cpName = "HackerRank";
-                    });
-                  },
-                    child: platformContainer(screenWidth, 'hackerrank.png')),
+                    onTap: (){
+                      setState(() {
+                        _showPlatformInfo = true;
+                        cpName = "LeetCode";
+                        imageName = leetCodeImage;
+                      });
+                    },
+                    child: platformContainer(screenWidth, leetCodeImage, res: _leetCodeRanking, resName: 'Rank: ')),
               ],
             ),
           ),
@@ -238,9 +247,10 @@ class _HomeScreen extends State<HomeScreen>{
                     setState(() {
                       _showPlatformInfo = true;
                       cpName = "Codeforces";
+                      imageName = codeforcesImage;
                     });
                   },
-                    child: platformContainer(screenWidth, 'codeforces.png', res: _codeForcesRating)),
+                    child: platformContainer(screenWidth, codeforcesImage, res: _codeForcesCurrRating)),
               ],
             ),
           ),
@@ -249,7 +259,7 @@ class _HomeScreen extends State<HomeScreen>{
     );
   }
   
-  Container platformContainer(double screenWidth, String image, {String res = '0xxx'}){
+  Container platformContainer(double screenWidth, String image, {String res = '0xxx', String resName = 'Rating:'}){
     return Container(
       decoration: BoxDecoration(
         color: Colors.blue[100],
@@ -266,11 +276,11 @@ class _HomeScreen extends State<HomeScreen>{
           Container(
             width: 80,
               height: 80,
-              child: Image.asset('assets/images/'+image)
+              child: Image.asset(image)
           ),
           SizedBox(height: 10,),
           Text(
-            'Rating: $res',
+            '$resName $res',
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ],
@@ -278,24 +288,202 @@ class _HomeScreen extends State<HomeScreen>{
     );
   }
 
-  Container platformInfo(String platformName, double screenWidth){
-    return Container(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(onPressed: (){setState(() {
-                _showPlatformInfo = false;
-              });}, icon: Icon(Icons.arrow_back)),
-              Text(platformName, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),),
-            ],
-          ),
-          Container(
-            width: screenWidth - 50,
-            child: Text("Hello"),
-          ),
-        ],
+  SingleChildScrollView platformInfo(String platformName, double screenWidth, String image){
+    return SingleChildScrollView(
+      child: Container(
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(onPressed: (){setState(() {
+                  _showPlatformInfo = false;
+                });}, icon: Icon(Icons.arrow_back)),
+                Text(platformName, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),),
+              ],
+            ),
+            Container(
+              width: screenWidth - 50,
+              decoration: BoxDecoration(
+                color: Colors.blue[100],
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  buildPlatformSpecific(platformName),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(height: 30,),
+                      Container(
+                        width: 120,
+                          height: 120,
+                          child: Image.asset(image)
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Expanded codeChefInfoDetails(){
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.all(15),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text("Handle: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefName, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rating (P): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefCurrentRating, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rating (H): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefHighestRating, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Stars: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefStars, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rank (G): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefGlobalRank, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rank (L): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefCountryRank, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Expanded leetCodeInfoDetails(){
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.all(15),
+        child: Column(
+          children: [
+            Column(
+              children: [
+                Text("Handle: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeName, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Total Probs: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeTotalProbs, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Solved Probs: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeTotalSolved, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rank: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeRanking, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Easy Probs: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeEasySolved, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Medium Probs: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeMediumSolved, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Hard Probs: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeHardSolved, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rate: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_leetCodeAcceptanceRate, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Expanded codeForcesInfoDetails(){
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.all(15),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text("Handle: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesName, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rating (C): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesCurrRating, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Rating (M): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesMaxRating, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Probs (S): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesProbs, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Row(
+              children: [
+                Text("Probs (LM): ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesProbsLastMonth, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+            Column(
+              children: [
+                Text("Last Visit: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeForcesLastVisit, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -305,19 +493,29 @@ class _HomeScreen extends State<HomeScreen>{
     return DateFormat('dd, EEE, yyyy').format(now);
   }
 
-  Future<void> _fetchCodeChefInfo() async{
+  String extractNumericPart(String input) {
+    // Remove all non-numeric characters from the input string
+    String numericPart = input.replaceAll(RegExp(r'[^0-9]'), '');
+    return numericPart;
+  }
+
+  Future<void> _fetchCodeChefInfo(String handle) async{
     setState(() {
       _isLoading = true;
     });
 
     try {
       final response = await http.get(
-          Uri.parse('https://codechef-api.vercel.app/karthik_rk'));
+          Uri.parse('https://codechef-api.vercel.app/$handle'));
 
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         setState(() {
-          _codechefrating = userData['currentRating'].toString();
+          _codeChefCurrentRating = userData['currentRating'].toString();
+          _codeChefHighestRating = userData['highestRating'].toString();
+          _codeChefGlobalRank = userData['globalRank'].toString();
+          _codeChefCountryRank = userData['countryRank'].toString();
+          _codeChefStars = userData['stars'].toString();
           _isLoading = false;
         });
       }
@@ -336,18 +534,24 @@ class _HomeScreen extends State<HomeScreen>{
     }
   }
 
-  Future<void> _fetchLeetCodeInfo() async{
+  Future<void> _fetchLeetCodeInfo(String handle) async{
     setState(() {
       _isLoading = true;
     });
 
     try {
       final response = await http.get(
-          Uri.parse('https://leetcode-stats-api.herokuapp.com/rk_karthik14'));
+          Uri.parse('https://leetcode-stats-api.herokuapp.com/$handle'));
 
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         setState(() {
+          _leetCodeTotalSolved = userData['totalSolved'].toString();
+          _leetCodeTotalProbs = userData['totalQuestions'].toString();
+          _leetCodeEasySolved = userData['easySolved'].toString();
+          _leetCodeMediumSolved = userData['mediumSolved'].toString();
+          _leetCodeHardSolved = userData['hardSolved'].toString();
+          _leetCodeAcceptanceRate = userData['acceptanceRate'].toString();
           _leetCodeRanking = userData['ranking'].toString();
           _isLoading = false;
         });
@@ -367,19 +571,23 @@ class _HomeScreen extends State<HomeScreen>{
     }
   }
 
-  Future<void> _fetchCodeforcesInfo() async{
+  Future<void> _fetchCodeforcesInfo(String handle) async{
     setState(() {
       _isLoading = true;
     });
 
     try {
       final response = await http.get(
-          Uri.parse('https://codeforces-api-zeta.vercel.app/rk_karthik'));
+          Uri.parse('https://codeforces-api-zeta.vercel.app/$handle'));
 
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         setState(() {
-          _codeForcesRating = userData['curr_rating'].toString();
+          _codeForcesCurrRating = userData['curr_rating'].toString();
+          _codeForcesMaxRating = userData['max_rating'].toString();
+          _codeForcesLastVisit = userData['last_visit'].toString();
+          _codeForcesProbs = extractNumericPart(userData['tot_probs'].toString());
+          _codeForcesProbsLastMonth = extractNumericPart(userData['probs_last_month'].toString());
           _isLoading = false;
         });
       }
@@ -395,6 +603,59 @@ class _HomeScreen extends State<HomeScreen>{
         _isLoading = false;
       });
       print(e);
+    }
+  }
+
+  Future<bool?> _showLogoutConfirmationDialog() async{
+    return await showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: const Text('Confirm Logout'),
+            content: const Text('Are you sure you want to log out?'),
+            actions: <Widget>[
+              TextButton(onPressed: (){Navigator.of(context).pop(false);}, child: const Text('Cancel')),
+              TextButton(onPressed: (){Navigator.of(context).pop(true);}, child: const Text('Logout'))
+            ],
+          );
+        }
+    );
+  }
+
+  void _retrieveInfo() async{
+
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    setState(() {
+      _codeChefName = sharedPreferences.getString('codeChefHandle') ?? '';
+      _codeForcesName = sharedPreferences.getString('codeForcesHandle') ?? '';
+      _leetCodeName = sharedPreferences.getString('leetCodeHandle') ?? '';
+
+      if(_codeChefName.isNotEmpty){
+        _fetchCodeChefInfo(_codeChefName);
+      }
+
+      if(_codeForcesName.isNotEmpty){
+        _fetchCodeforcesInfo(_codeForcesName);
+      }
+
+      if(_leetCodeName.isNotEmpty){
+        _fetchLeetCodeInfo(_leetCodeName);
+      }
+    });
+  }
+
+  void _logout() async{
+    bool? confirmLogout = await _showLogoutConfirmationDialog();
+
+    if(confirmLogout ?? false){
+      final SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      sharedPreferences.clear();
+      Get.off(
+        const SplashScreen(),
+        transition: Transition.fade,
+        duration: const Duration(seconds: 1),
+      );
     }
   }
 
