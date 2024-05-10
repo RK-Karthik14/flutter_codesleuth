@@ -36,6 +36,7 @@ class _HomeScreen extends State<HomeScreen>{
   String _codeChefCountryRank = '';
   String _codeChefStars = '';
   String _codeChefImage = "assets/images/codechef.png";
+  String _codeChefLastContest = '';
 
   String _leetCodeName = '';
   String _leetCodeTotalSolved = '';
@@ -374,6 +375,12 @@ class _HomeScreen extends State<HomeScreen>{
                 Text(_codeChefCountryRank, style: TextStyle(color: Colors.black, fontSize: 18),),
               ],
             ),
+            Column(
+              children: [
+                Text("Last COntest: ", style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),),
+                Text(_codeChefLastContest, style: TextStyle(color: Colors.black, fontSize: 18),),
+              ],
+            ),
           ],
         ),
       ),
@@ -506,7 +513,7 @@ class _HomeScreen extends State<HomeScreen>{
 
     try {
       final response = await http.get(
-          Uri.parse('https://codechef-api.vercel.app/$handle'));
+          Uri.parse('https://codechef-api-one.vercel.app/$handle'));
 
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
@@ -516,6 +523,7 @@ class _HomeScreen extends State<HomeScreen>{
           _codeChefGlobalRank = userData['globalRank'].toString();
           _codeChefCountryRank = userData['countryRank'].toString();
           _codeChefStars = userData['stars'].toString();
+          _codeChefLastContest = userData['lastContest'].toString();
           _isLoading = false;
         });
       }
@@ -607,7 +615,7 @@ class _HomeScreen extends State<HomeScreen>{
   }
 
   Future<bool?> _showLogoutConfirmationDialog() async{
-    return await showDialog(
+    return await showDialog<bool>(
         context: context,
         builder: (BuildContext context){
           return AlertDialog(

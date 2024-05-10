@@ -82,6 +82,12 @@ class _profileIndex extends State<profileIndex>{
     await sharedPreferences.setString('leetCodeHandle', leetCodeHandle);
 
     customtoast("Handles Updated Successfully", context);
+
+    setState(() {
+      _codeChefController.text = codeChefHandle;
+      _codeforcesController.text = codeForceHandle;
+      _leetCodeController.text = leetCodeHandle;
+    });
   }
 
   Future<void> _loadHandles() async{
